@@ -1,6 +1,7 @@
 use std::{
     collections::HashMap,
     env, fs,
+    io::IsTerminal,
     path::{Path, PathBuf},
     sync::Arc,
 };
@@ -300,7 +301,8 @@ pub(crate) fn print_table_for_agent(
         return;
     }
     let terminal_width = crate::terminal_width();
-    let compact = shared.compact || terminal_width < crate::USAGE_COMPACT_WIDTH_THRESHOLD;
+    let is_tty = std::io::stdout().is_terminal();
+    let compact = shared.compact || (is_tty && terminal_width < crate::USAGE_COMPACT_WIDTH_THRESHOLD);
     print_box_title(
         &format!(
             "{agent_name} Token Usage Report - {}",

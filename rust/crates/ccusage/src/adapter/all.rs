@@ -1,5 +1,6 @@
 use std::{
     collections::{BTreeMap, BTreeSet},
+    io::IsTerminal,
     sync::mpsc,
     thread,
 };
@@ -858,7 +859,8 @@ fn print_table(
         return;
     }
     let terminal_width = crate::terminal_width();
-    let compact = shared.compact || terminal_width < crate::USAGE_COMPACT_WIDTH_THRESHOLD;
+    let is_tty = std::io::stdout().is_terminal();
+    let compact = shared.compact || (is_tty && terminal_width < crate::USAGE_COMPACT_WIDTH_THRESHOLD);
     let (headers, aligns) = all_table_columns(kind, compact);
     let mut table = SimpleTable::new(headers, aligns, shared)
         .with_terminal_width(terminal_width)
