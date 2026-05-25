@@ -40,6 +40,7 @@ where
 struct UsageAccumulator {
     counts: TokenCounts,
     cost: f64,
+    market_cost: f64,
     credits: Option<f64>,
     message_count: Option<u64>,
     models: Vec<String>,
@@ -53,6 +54,7 @@ impl UsageAccumulator {
         self.counts.add_usage(usage);
         self.counts.extra_total_tokens += entry.extra_total_tokens;
         self.cost += entry.cost;
+        self.market_cost += entry.market_cost;
         if let Some(credits) = entry.credits {
             *self.credits.get_or_insert(0.0) += credits;
         }
@@ -79,6 +81,7 @@ impl UsageAccumulator {
             breakdown.cache_read_tokens += usage.cache_read_input_tokens;
             breakdown.extra_total_tokens += entry.extra_total_tokens;
             breakdown.cost += entry.cost;
+            breakdown.market_cost += entry.market_cost;
         }
     }
 
@@ -97,6 +100,7 @@ impl UsageAccumulator {
             cache_read_tokens: self.counts.cache_read_tokens,
             extra_total_tokens: self.counts.extra_total_tokens,
             total_cost: self.cost,
+            market_cost: self.market_cost,
             credits: self.credits,
             message_count: self.message_count,
             models_used: self.models,
@@ -196,6 +200,7 @@ fn aggregate_summaries(rows: &[&UsageSummary]) -> UsageSummary {
         cache_read_tokens: 0,
         extra_total_tokens: 0,
         total_cost: 0.0,
+        market_cost: 0.0,
         credits: None,
         message_count: None,
         models_used: Vec::new(),
@@ -541,6 +546,7 @@ mod tests {
             session_id: Arc::from(fixture.session_id),
             project_path: Arc::from(fixture.project_path),
             cost: fixture.cost,
+            market_cost: 0.0,
             extra_total_tokens: fixture.extra_total_tokens,
             credits: fixture.credits,
             message_count: fixture.message_count,
@@ -570,6 +576,7 @@ mod tests {
             cache_read_tokens: 2,
             extra_total_tokens: 3,
             total_cost: fixture.cost,
+            market_cost: 0.0,
             credits: Some(0.5),
             message_count: Some(1),
             models_used: vec![fixture.model.to_string()],
@@ -581,6 +588,7 @@ mod tests {
                 cache_read_tokens: 2,
                 extra_total_tokens: 3,
                 cost: fixture.cost,
+                market_cost: 0.0,
             }],
             project: None,
             versions: None,

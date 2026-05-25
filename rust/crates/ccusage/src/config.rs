@@ -420,6 +420,12 @@ fn apply_shared_options(shared: &mut SharedArgs, options: SharedOptions) {
     if let Some(single_thread) = options.single_thread {
         shared.single_thread = single_thread;
     }
+    if let Some(market_price) = options.market_price {
+        shared.market_price = market_price;
+    }
+    if let Some(model_aliases) = options.model_aliases {
+        shared.model_aliases = model_aliases;
+    }
 }
 
 impl From<ConfigCostMode> for CostMode {

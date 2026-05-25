@@ -10,6 +10,7 @@ expression: rows
     "cacheCreationTokens": 1,
     "cacheReadTokens": 2,
     "totalCost": 0.5,
+    "marketCost": 0.0,
     "credits": 0.5,
     "messageCount": 1,
     "modelsUsed": [
@@ -22,7 +23,8 @@ expression: rows
         "outputTokens": 10,
         "cacheCreationTokens": 1,
         "cacheReadTokens": 2,
-        "cost": 0.5
+        "cost": 0.5,
+        "marketCost": 0.0
       }
     ]
   },
@@ -33,6 +35,7 @@ expression: rows
     "cacheCreationTokens": 1,
     "cacheReadTokens": 2,
     "totalCost": 0.25,
+    "marketCost": 0.0,
     "credits": 0.5,
     "messageCount": 1,
     "modelsUsed": [
@@ -45,7 +48,8 @@ expression: rows
         "outputTokens": 10,
         "cacheCreationTokens": 1,
         "cacheReadTokens": 2,
-        "cost": 0.25
+        "cost": 0.25,
+        "marketCost": 0.0
       }
     ]
   }

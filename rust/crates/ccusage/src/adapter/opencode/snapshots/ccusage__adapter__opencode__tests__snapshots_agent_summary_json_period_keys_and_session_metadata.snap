@@ -41,6 +41,7 @@ expression: "serde_json::json!({\n    \"daily\": agent_summary_json(&daily, Agen
       "cacheReadTokens": 5,
       "credits": 1.5,
       "inputTokens": 100,
+      "marketCost": 0.0,
       "outputTokens": 50,
       "totalCost": 0.25,
       "totalTokens": 172
@@ -101,6 +102,7 @@ expression: "serde_json::json!({\n    \"daily\": agent_summary_json(&daily, Agen
       "cacheReadTokens": 5,
       "credits": 1.5,
       "inputTokens": 100,
+      "marketCost": 0.0,
       "outputTokens": 50,
       "totalCost": 0.25,
       "totalTokens": 172

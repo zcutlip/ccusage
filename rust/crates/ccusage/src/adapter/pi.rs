@@ -228,6 +228,7 @@ pub(crate) fn read_session_file(
             session_id: Arc::from(session_id.as_str()),
             project_path: Arc::from(project.as_str()),
             cost,
+            market_cost: 0.0,
             extra_total_tokens,
             credits: None,
             message_count: None,

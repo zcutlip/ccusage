@@ -1,5 +1,5 @@
 use std::{
-    collections::HashSet,
+    collections::{HashMap, HashSet},
     fs,
     path::{Path, PathBuf},
 };
@@ -42,7 +42,7 @@ pub(crate) fn load_entries_from_directory(
     opencode_dir: &Path,
     shared: &SharedArgs,
 ) -> Result<Vec<LoadedEntry>> {
-    let pricing = if shared.mode == CostMode::Display {
+    let pricing = if shared.mode == CostMode::Display && !shared.market_price {
         None
     } else {
         Some(PricingMap::load(
@@ -54,9 +54,15 @@ pub(crate) fn load_entries_from_directory(
     let mut entries = Vec::new();
     let mut seen = HashSet::new();
     if let Some(db_path) = db_path(opencode_dir) {
-        for entry in
-            load_entries_from_database(&db_path, tz.as_ref(), shared.mode, pricing.as_ref(), shared)
-        {
+        for entry in load_entries_from_database(
+            &db_path,
+            tz.as_ref(),
+            shared.mode,
+            pricing.as_ref(),
+            shared.market_price,
+            &shared.model_aliases,
+            shared,
+        ) {
             if let Some(id) = entry_id(&entry) {
                 if !seen.insert(id.to_string()) {
                     continue;
@@ -70,7 +76,9 @@ pub(crate) fn load_entries_from_directory(
     let mut files = Vec::new();
     collect_files_with_extension(&messages_dir, "json", &mut files);
     for file in files {
-        if let Some(entry) = read_message_file(&file, tz.as_ref(), shared.mode, pricing.as_ref())? {
+        if let Some(entry) =
+            read_message_file(&file, tz.as_ref(), shared.mode, pricing.as_ref(), shared.market_price, &shared.model_aliases)?
+        {
             if let Some(id) = entry_id(&entry) {
                 if !seen.insert(id.to_string()) {
                     continue;
@@ -117,6 +125,8 @@ fn load_entries_from_database(
     tz: Option<&JiffTimeZone>,
     mode: CostMode,
     pricing: Option<&PricingMap>,
+    market_price: bool,
+    model_aliases: &HashMap<String, String>,
     shared: &SharedArgs,
 ) -> Vec<LoadedEntry> {
     let Ok(connection) =
@@ -152,7 +162,7 @@ fn load_entries_from_database(
                     continue;
                 };
                 if let Some(entry) =
-                    message_value_to_entry(&value, Some(id), Some(session_id), tz, mode, pricing)
+                    message_value_to_entry(&value, Some(id), Some(session_id), tz, mode, pricing, model_aliases, market_price)
                 {
                     entries.push(entry);
                 }
@@ -175,13 +185,15 @@ fn read_message_file(
     tz: Option<&JiffTimeZone>,
     mode: CostMode,
     pricing: Option<&PricingMap>,
+    market_price: bool,
+    model_aliases: &HashMap<String, String>,
 ) -> Result<Option<LoadedEntry>> {
     let content = fs::read_to_string(path)?;
     let Ok(value) = serde_json::from_str::<Value>(&content) else {
         return Ok(None);
     };
     Ok(message_value_to_entry(
-        &value, None, None, tz, mode, pricing,
+        &value, None, None, tz, mode, pricing, model_aliases, market_price,
     ))
 }
 

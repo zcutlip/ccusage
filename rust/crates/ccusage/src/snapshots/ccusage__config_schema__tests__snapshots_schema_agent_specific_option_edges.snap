@@ -132,6 +132,11 @@ expression: "json!({\n    \"rootRef\": schema[\"$ref\"], \"rootProperties\":\n  
         "markdownDescription": "Output in JSON format.",
         "type": "boolean"
       },
+      "marketPrice": {
+        "description": "Show market-rate cost alongside recorded cost.",
+        "markdownDescription": "Show market-rate cost alongside recorded cost.",
+        "type": "boolean"
+      },
       "mode": {
         "description": "Cost calculation mode.",
         "enum": [
@@ -141,6 +146,14 @@ expression: "json!({\n    \"rootRef\": schema[\"$ref\"], \"rootProperties\":\n  
         ],
         "markdownDescription": "Cost calculation mode.",
         "type": "string"
+      },
+      "modelAliases": {
+        "additionalProperties": {
+          "type": "string"
+        },
+        "description": "Model name aliases for pricing lookup. Maps agent model IDs to LiteLLM pricing keys.",
+        "markdownDescription": "Model name aliases for pricing lookup. Maps agent model IDs to LiteLLM pricing keys.",
+        "type": "object"
       },
       "noColor": {
         "description": "Disable colored output.",
@@ -254,6 +267,12 @@ expression: "json!({\n    \"rootRef\": schema[\"$ref\"], \"rootProperties\":\n  
         "markdownDescription": "Output in JSON format.",
         "type": "boolean"
       },
+      "marketPrice": {
+        "default": false,
+        "description": "Show market-rate cost alongside recorded cost.",
+        "markdownDescription": "Show market-rate cost alongside recorded cost.",
+        "type": "boolean"
+      },
       "mode": {
         "default": "auto",
         "description": "Cost calculation mode.",
@@ -264,6 +283,15 @@ expression: "json!({\n    \"rootRef\": schema[\"$ref\"], \"rootProperties\":\n  
         ],
         "markdownDescription": "Cost calculation mode.",
         "type": "string"
+      },
+      "modelAliases": {
+        "additionalProperties": {
+          "type": "string"
+        },
+        "default": {},
+        "description": "Model name aliases for pricing lookup. Maps agent model IDs to LiteLLM pricing keys.",
+        "markdownDescription": "Model name aliases for pricing lookup. Maps agent model IDs to LiteLLM pricing keys.",
+        "type": "object"
       },
       "noColor": {
         "default": false,
@@ -362,6 +390,11 @@ expression: "json!({\n    \"rootRef\": schema[\"$ref\"], \"rootProperties\":\n  
         "markdownDescription": "Output in JSON format.",
         "type": "boolean"
       },
+      "marketPrice": {
+        "description": "Show market-rate cost alongside recorded cost.",
+        "markdownDescription": "Show market-rate cost alongside recorded cost.",
+        "type": "boolean"
+      },
       "mode": {
         "description": "Cost calculation mode.",
         "enum": [
@@ -371,6 +404,14 @@ expression: "json!({\n    \"rootRef\": schema[\"$ref\"], \"rootProperties\":\n  
         ],
         "markdownDescription": "Cost calculation mode.",
         "type": "string"
+      },
+      "modelAliases": {
+        "additionalProperties": {
+          "type": "string"
+        },
+        "description": "Model name aliases for pricing lookup. Maps agent model IDs to LiteLLM pricing keys.",
+        "markdownDescription": "Model name aliases for pricing lookup. Maps agent model IDs to LiteLLM pricing keys.",
+        "type": "object"
       },
       "noColor": {
         "description": "Disable colored output.",
@@ -476,6 +517,12 @@ expression: "json!({\n    \"rootRef\": schema[\"$ref\"], \"rootProperties\":\n  
         "markdownDescription": "Output in JSON format.",
         "type": "boolean"
       },
+      "marketPrice": {
+        "default": false,
+        "description": "Show market-rate cost alongside recorded cost.",
+        "markdownDescription": "Show market-rate cost alongside recorded cost.",
+        "type": "boolean"
+      },
       "mode": {
         "default": "auto",
         "description": "Cost calculation mode.",
@@ -486,6 +533,15 @@ expression: "json!({\n    \"rootRef\": schema[\"$ref\"], \"rootProperties\":\n  
         ],
         "markdownDescription": "Cost calculation mode.",
         "type": "string"
+      },
+      "modelAliases": {
+        "additionalProperties": {
+          "type": "string"
+        },
+        "default": {},
+        "description": "Model name aliases for pricing lookup. Maps agent model IDs to LiteLLM pricing keys.",
+        "markdownDescription": "Model name aliases for pricing lookup. Maps agent model IDs to LiteLLM pricing keys.",
+        "type": "object"
       },
       "noColor": {
         "default": false,
@@ -584,6 +640,11 @@ expression: "json!({\n    \"rootRef\": schema[\"$ref\"], \"rootProperties\":\n  
         "markdownDescription": "Output in JSON format.",
         "type": "boolean"
       },
+      "marketPrice": {
+        "description": "Show market-rate cost alongside recorded cost.",
+        "markdownDescription": "Show market-rate cost alongside recorded cost.",
+        "type": "boolean"
+      },
       "mode": {
         "description": "Cost calculation mode.",
         "enum": [
@@ -593,6 +654,14 @@ expression: "json!({\n    \"rootRef\": schema[\"$ref\"], \"rootProperties\":\n  
         ],
         "markdownDescription": "Cost calculation mode.",
         "type": "string"
+      },
+      "modelAliases": {
+        "additionalProperties": {
+          "type": "string"
+        },
+        "description": "Model name aliases for pricing lookup. Maps agent model IDs to LiteLLM pricing keys.",
+        "markdownDescription": "Model name aliases for pricing lookup. Maps agent model IDs to LiteLLM pricing keys.",
+        "type": "object"
       },
       "noColor": {
         "description": "Disable colored output.",
@@ -697,6 +766,11 @@ expression: "json!({\n    \"rootRef\": schema[\"$ref\"], \"rootProperties\":\n  
         "markdownDescription": "Output in JSON format.",
         "type": "boolean"
       },
+      "marketPrice": {
+        "description": "Show market-rate cost alongside recorded cost.",
+        "markdownDescription": "Show market-rate cost alongside recorded cost.",
+        "type": "boolean"
+      },
       "mode": {
         "description": "Cost calculation mode.",
         "enum": [
@@ -706,6 +780,14 @@ expression: "json!({\n    \"rootRef\": schema[\"$ref\"], \"rootProperties\":\n  
         ],
         "markdownDescription": "Cost calculation mode.",
         "type": "string"
+      },
+      "modelAliases": {
+        "additionalProperties": {
+          "type": "string"
+        },
+        "description": "Model name aliases for pricing lookup. Maps agent model IDs to LiteLLM pricing keys.",
+        "markdownDescription": "Model name aliases for pricing lookup. Maps agent model IDs to LiteLLM pricing keys.",
+        "type": "object"
       },
       "noColor": {
         "description": "Disable colored output.",

@@ -1,3 +1,4 @@
+use std::collections::HashMap;
 use std::sync::Arc;
 
 use jiff::tz::TimeZone as JiffTimeZone;
@@ -9,6 +10,23 @@ use crate::{
     UsageMessage,
 };
 
+/// Hardcoded default model aliases. User config can override these.
+#[rustfmt::skip]
+const DEFAULT_MODEL_ALIASES: &[(&str, &str)] = &[
+    ("deepseek-v4-pro", "deepseek/deepseek-chat"),
+    ("deepseek-v4-flash", "deepseek/deepseek-chat"),
+    ("deepseek-v4-flash-free", "deepseek/deepseek-chat"),
+    ("glm-5", "zai.glm-5"),
+    ("glm-5.1", "zai.glm-5"),
+    ("glm-4.7", "zai.glm-4.7"),
+    ("kimi-k2.5", "moonshot/kimi-k2.5"),
+    ("kimi-k2.6", "moonshot/kimi-k2.6"),
+    ("minimax-m2.5", "minimax/MiniMax-M2.1"),
+    ("minimax-m2.5-free", "minimax/MiniMax-M2.1"),
+    ("qwen3.6-plus", "openrouter/qwen/qwen3.6-plus"),
+    ("qwen3.6-plus-free", "openrouter/qwen/qwen3.6-plus"),
+];
+
 pub(crate) fn message_value_to_entry(
     value: &Value,
     id: Option<String>,
@@ -16,6 +34,8 @@ pub(crate) fn message_value_to_entry(
     tz: Option<&JiffTimeZone>,
     mode: CostMode,
     pricing: Option<&PricingMap>,
+    model_aliases: &HashMap<String, String>,
+    market_price: bool,
 ) -> Option<LoadedEntry> {
     let tokens = value.get("tokens")?;
     let usage = TokenUsageRaw {
@@ -67,8 +87,20 @@ pub(crate) fn message_value_to_entry(
         output_tokens: usage.output_tokens.saturating_add(extra_total_tokens),
         ..usage
     };
-    let cost =
-        calculate_open_code_cost(&model, &provider, cost_usage, data.cost_usd, mode, pricing);
+    let cost = calculate_open_code_cost(
+        &model,
+        &provider,
+        cost_usage,
+        data.cost_usd,
+        mode,
+        pricing,
+        model_aliases,
+    );
+    let market_cost = if market_price {
+        calculate_open_code_market_cost(&model, &provider, cost_usage, pricing, model_aliases)
+    } else {
+        0.0
+    };
     let loaded_session_id = data
         .session_id
         .clone()
@@ -80,6 +112,7 @@ pub(crate) fn message_value_to_entry(
         session_id: Arc::from(loaded_session_id),
         project_path: Arc::from("OpenCode"),
         cost,
+        market_cost,
         extra_total_tokens,
         credits: None,
         message_count: None,
@@ -94,13 +127,16 @@ fn calculate_open_code_cost(
     provider: &str,
     usage: TokenUsageRaw,
     cost_usd: Option<f64>,
-    _mode: CostMode,
+    mode: CostMode,
     pricing: Option<&PricingMap>,
+    aliases: &HashMap<String, String>,
 ) -> f64 {
     if let Some(cost) = cost_usd.filter(|cost| *cost > 0.0) {
-        return cost;
+        if mode != CostMode::Calculate {
+            return cost;
+        }
     }
-    for candidate in open_code_model_candidates(model, provider) {
+    for candidate in open_code_model_candidates(aliases, model, provider) {
         let cost =
             calculate_cost_for_usage(Some(&candidate), usage, None, CostMode::Calculate, pricing);
         if cost > 0.0 {
@@ -110,8 +146,25 @@ fn calculate_open_code_cost(
     0.0
 }
 
-fn open_code_model_candidates(model: &str, provider: &str) -> Vec<String> {
-    let resolved = resolve_open_code_model_name(model);
+fn calculate_open_code_market_cost(
+    model: &str,
+    provider: &str,
+    usage: TokenUsageRaw,
+    pricing: Option<&PricingMap>,
+    aliases: &HashMap<String, String>,
+) -> f64 {
+    for candidate in open_code_model_candidates(aliases, model, provider) {
+        let cost =
+            calculate_cost_for_usage(Some(&candidate), usage, None, CostMode::Calculate, pricing);
+        if cost > 0.0 {
+            return cost;
+        }
+    }
+    0.0
+}
+
+fn open_code_model_candidates(aliases: &HashMap<String, String>, model: &str, provider: &str) -> Vec<String> {
+    let resolved = resolve_open_code_model_name(model, aliases);
     let normalized = normalize_open_code_model_name(&resolved);
     let mut base = vec![resolved];
     if normalized != base[0] {
@@ -126,7 +179,15 @@ fn open_code_model_candidates(model: &str, provider: &str) -> Vec<String> {
     candidates
 }
 
-fn resolve_open_code_model_name(model: &str) -> String {
+fn resolve_open_code_model_name(model: &str, aliases: &HashMap<String, String>) -> String {
+    // Check user config aliases first
+    if let Some(alias) = aliases.get(model) {
+        return alias.clone();
+    }
+    // Then check hardcoded defaults
+    if let Some(alias) = DEFAULT_MODEL_ALIASES.iter().find(|(from, _)| *from == model) {
+        return alias.1.to_string();
+    }
     match model {
         "gemini-3-pro-high" => "gemini-3-pro-preview".to_string(),
         _ => model.to_string(),
@@ -159,6 +220,8 @@ fn normalize_open_code_model_name(model: &str) -> String {
 
 #[cfg(test)]
 mod tests {
+    use std::collections::HashMap;
+
     use serde_json::json;
 
     use super::{message_value_to_entry, open_code_model_candidates};
@@ -224,6 +287,8 @@ mod tests {
             None,
             CostMode::Auto,
             Some(&pricing),
+            &HashMap::new(),
+            false,
         )
         .unwrap();
 
@@ -249,6 +314,8 @@ mod tests {
             None,
             CostMode::Auto,
             None,
+            &HashMap::new(),
+            false,
         )
         .unwrap();
 
@@ -273,6 +340,8 @@ mod tests {
             None,
             CostMode::Auto,
             None,
+            &HashMap::new(),
+            false,
         )
         .unwrap();
 
@@ -283,7 +352,7 @@ mod tests {
     #[test]
     fn creates_open_code_provider_and_normalized_model_candidates() {
         assert_eq!(
-            open_code_model_candidates("claude-sonnet-4.5", "github-copilot"),
+            open_code_model_candidates(&HashMap::new(), "claude-sonnet-4.5", "github-copilot"),
             vec![
                 "claude-sonnet-4.5",
                 "claude-sonnet-4-5",
@@ -325,6 +394,8 @@ mod tests {
             None,
             CostMode::Auto,
             Some(&pricing),
+            &HashMap::new(),
+            false,
         )
         .unwrap();
         let display_cost = message_value_to_entry(
@@ -341,6 +412,8 @@ mod tests {
             None,
             CostMode::Display,
             None,
+            &HashMap::new(),
+            false,
         )
         .unwrap();
 
@@ -348,10 +421,10 @@ mod tests {
             "calculated": entry_snapshot(&calculated),
             "displayCost": entry_snapshot(&display_cost),
             "candidates": {
-                "anthropic": open_code_model_candidates("claude-sonnet-4.5", "anthropic"),
-                "copilot": open_code_model_candidates("claude-sonnet-4.5", "github-copilot"),
-                "geminiAlias": open_code_model_candidates("gemini-3-pro-high", "google"),
-                "unknownProvider": open_code_model_candidates("gpt-test", "unknown"),
+                "anthropic": open_code_model_candidates(&HashMap::new(), "claude-sonnet-4.5", "anthropic"),
+                "copilot": open_code_model_candidates(&HashMap::new(), "claude-sonnet-4.5", "github-copilot"),
+                "geminiAlias": open_code_model_candidates(&HashMap::new(), "gemini-3-pro-high", "google"),
+                "unknownProvider": open_code_model_candidates(&HashMap::new(), "gpt-test", "unknown"),
             }
         }));
     }

@@ -308,6 +308,7 @@ fn message_value_to_entry(
         session_id: Arc::from(session_id),
         project_path: Arc::from("Kilo"),
         cost,
+        market_cost: 0.0,
         extra_total_tokens,
         credits: None,
         model: Some(model),

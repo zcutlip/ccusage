@@ -525,6 +525,7 @@ fn event_to_loaded(
         session_id: Arc::from(event.session_id),
         project_path: Arc::from("Gemini"),
         cost,
+        market_cost: 0.0,
         extra_total_tokens,
         credits: None,
         message_count: None,

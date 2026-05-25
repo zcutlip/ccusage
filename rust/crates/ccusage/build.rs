@@ -204,8 +204,11 @@ fn is_embedded_model(model: &str) -> bool {
         || model.starts_with("global.anthropic.")
         || model.starts_with("jp.anthropic.")
         || model.starts_with("au.anthropic.")
+        || model.starts_with("azure/")
+        || model == "deepseek-chat"
+        || model == "deepseek-reasoner"
+        || model.starts_with("deepseek/")
         || model.starts_with("gpt-")
         || model.starts_with("openai/")
-        || model.starts_with("azure/")
         || model.starts_with("openrouter/openai/")
 }

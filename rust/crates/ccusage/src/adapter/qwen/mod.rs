@@ -274,6 +274,7 @@ mod tests {
             cache_read_tokens: 0,
             extra_total_tokens: 0,
             total_cost: 0.0,
+            market_cost: 0.0,
             credits: None,
             message_count: None,
             models_used: Vec::new(),

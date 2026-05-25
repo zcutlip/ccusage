@@ -10,6 +10,7 @@ expression: rows
     "cacheCreationTokens": 30,
     "cacheReadTokens": 13,
     "totalCost": 0.375,
+    "marketCost": 0.0,
     "credits": 1.5,
     "messageCount": 5,
     "modelsUsed": [
@@ -23,7 +24,8 @@ expression: rows
         "outputTokens": 80,
         "cacheCreationTokens": 20,
         "cacheReadTokens": 8,
-        "cost": 0.25
+        "cost": 0.25,
+        "marketCost": 0.0
       },
       {
         "modelName": "gpt-5.2-codex",
@@ -31,7 +33,8 @@ expression: rows
         "outputTokens": 50,
         "cacheCreationTokens": 10,
         "cacheReadTokens": 5,
-        "cost": 0.125
+        "cost": 0.125,
+        "marketCost": 0.0
       }
     ],
     "project": "/workspace/api"
@@ -43,6 +46,7 @@ expression: rows
     "cacheCreationTokens": 0,
     "cacheReadTokens": 0,
     "totalCost": 0.0,
+    "marketCost": 0.0,
     "credits": null,
     "modelsUsed": [],
     "modelBreakdowns": [],

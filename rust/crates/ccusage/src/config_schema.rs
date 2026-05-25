@@ -2,6 +2,7 @@
 
 use serde::de::DeserializeOwned;
 use serde::Deserialize;
+use std::collections::HashMap;
 use serde_json::{json, Map, Value};
 
 use schemars::{r#gen::SchemaSettings, JsonSchema};
@@ -325,6 +326,10 @@ pub(crate) struct SharedOptions {
     pub(crate) compact: Option<bool>,
     /// Disable parallel file processing.
     pub(crate) single_thread: Option<bool>,
+    /// Show market-rate cost alongside recorded cost.
+    pub(crate) market_price: Option<bool>,
+    /// Model name aliases for pricing lookup. Maps agent model IDs to LiteLLM pricing keys.
+    pub(crate) model_aliases: Option<HashMap<String, String>>,
 }
 
 #[derive(Debug, Default, Deserialize, JsonSchema)]
@@ -532,6 +537,10 @@ impl SharedOptions {
             all: bool_option(map, "all"),
             compact: bool_option(map, "compact"),
             single_thread: bool_option(map, "singleThread"),
+            market_price: bool_option(map, "marketPrice"),
+            model_aliases: map
+                .get("modelAliases")
+                .and_then(|v| serde_json::from_value(v.clone()).ok()),
         }
     }
 }
@@ -759,6 +768,8 @@ fn add_schema_defaults(schema: &mut Value) {
             ("all", json!(false)),
             ("compact", json!(false)),
             ("singleThread", json!(false)),
+            ("marketPrice", json!(false)),
+            ("modelAliases", json!({})),
         ],
     );
     set_definition_defaults(schema, "WeeklyOptions", &[("startOfWeek", json!("sunday"))]);
@@ -927,6 +938,8 @@ mod tests {
             "debugSamples",
             "jq",
             "json",
+            "marketPrice",
+            "modelAliases",
             "mode",
             "noColor",
             "noOffline",

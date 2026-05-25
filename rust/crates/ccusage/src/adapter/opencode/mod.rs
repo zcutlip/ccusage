@@ -222,6 +222,7 @@ mod tests {
             cache_read_tokens: 5,
             extra_total_tokens: 7,
             total_cost: 0.25,
+            market_cost: 0.0,
             credits: Some(1.5),
             message_count: Some(3),
             models_used: vec![
@@ -236,6 +237,7 @@ mod tests {
                 cache_read_tokens: 5,
                 extra_total_tokens: 7,
                 cost: 0.25,
+                market_cost: 0.0,
             }],
             project: None,
             versions: Some(vec!["1.0.0".to_string()]),

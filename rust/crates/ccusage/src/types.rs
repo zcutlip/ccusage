@@ -80,6 +80,7 @@ pub(crate) struct ModelBreakdown {
     #[serde(skip_serializing)]
     pub(crate) extra_total_tokens: u64,
     pub(crate) cost: f64,
+    pub(crate) market_cost: f64,
 }
 
 #[derive(Debug, Clone)]
@@ -91,6 +92,7 @@ pub(crate) struct LoadedEntry {
     pub(crate) session_id: Arc<str>,
     pub(crate) project_path: Arc<str>,
     pub(crate) cost: f64,
+    pub(crate) market_cost: f64,
     pub(crate) extra_total_tokens: u64,
     pub(crate) credits: Option<f64>,
     pub(crate) message_count: Option<u64>,
@@ -169,6 +171,7 @@ pub(crate) struct UsageSummary {
     #[serde(skip_serializing)]
     pub(crate) extra_total_tokens: u64,
     pub(crate) total_cost: f64,
+    pub(crate) market_cost: f64,
     pub(crate) credits: Option<f64>,
     #[serde(skip_serializing_if = "Option::is_none")]
     pub(crate) message_count: Option<u64>,

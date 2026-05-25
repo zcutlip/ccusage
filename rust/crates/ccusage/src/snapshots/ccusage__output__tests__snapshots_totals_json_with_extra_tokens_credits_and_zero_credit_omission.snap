@@ -7,6 +7,7 @@ expression: "totals_json(&[first, second])"
   "cacheReadTokens": 10,
   "credits": 1.25,
   "inputTokens": 1234,
+  "marketCost": 0.0,
   "outputTokens": 567,
   "totalCost": 0.42,
   "totalTokens": 1920

@@ -515,6 +515,71 @@ impl PricingMap {
             .insert("grok-4.3".to_string(), 1_000_000);
         self.context_limits.insert("gpt-5.4".to_string(), 1_050_000);
 
+        // DeepSeek
+        for model in ["deepseek-chat", "deepseek/deepseek-chat", "deepseek-reasoner", "deepseek/deepseek-reasoner"] {
+            self.entries.insert(model.to_string(), Pricing {
+                input: 2.8e-7, output: 4.2e-7, cache_create: 0.0, cache_read: 2.8e-8,
+                cache_read_explicit: false,
+                input_above_200k: None, output_above_200k: None,
+                cache_create_above_200k: None, cache_read_above_200k: None,
+                fast_multiplier: 1.0,
+            });
+        }
+        // GLM
+        for model in ["zai.glm-5", "openrouter/z-ai/glm-5"] {
+            self.entries.insert(model.to_string(), Pricing {
+                input: 1.0e-6, output: 3.2e-6, cache_create: 0.0, cache_read: 0.0,
+                cache_read_explicit: false,
+                input_above_200k: None, output_above_200k: None,
+                cache_create_above_200k: None, cache_read_above_200k: None,
+                fast_multiplier: 1.0,
+            });
+        }
+        for model in ["zai.glm-4.7", "openrouter/z-ai/glm-4.7"] {
+            self.entries.insert(model.to_string(), Pricing {
+                input: 6.0e-7, output: 2.2e-6, cache_create: 0.0, cache_read: 0.0,
+                cache_read_explicit: false,
+                input_above_200k: None, output_above_200k: None,
+                cache_create_above_200k: None, cache_read_above_200k: None,
+                fast_multiplier: 1.0,
+            });
+        }
+        // Kimi
+        for model in ["moonshot/kimi-k2.5", "moonshotai/kimi-k2.5"] {
+            self.entries.insert(model.to_string(), Pricing {
+                input: 6.0e-7, output: 3.0e-6, cache_create: 0.0, cache_read: 1.0e-7,
+                cache_read_explicit: false,
+                input_above_200k: None, output_above_200k: None,
+                cache_create_above_200k: None, cache_read_above_200k: None,
+                fast_multiplier: 1.0,
+            });
+        }
+        self.entries.insert("moonshot/kimi-k2.6".to_string(), Pricing {
+            input: 9.5e-7, output: 4.0e-6, cache_create: 0.0, cache_read: 1.6e-7,
+            cache_read_explicit: false,
+            input_above_200k: None, output_above_200k: None,
+            cache_create_above_200k: None, cache_read_above_200k: None,
+            fast_multiplier: 1.0,
+        });
+        // MiniMax
+        for model in ["minimax/MiniMax-M2.1", "minimax.minimax-m2.5"] {
+            self.entries.insert(model.to_string(), Pricing {
+                input: 3.0e-7, output: 1.2e-6, cache_create: 3.75e-7, cache_read: 3.0e-8,
+                cache_read_explicit: false,
+                input_above_200k: None, output_above_200k: None,
+                cache_create_above_200k: None, cache_read_above_200k: None,
+                fast_multiplier: 1.0,
+            });
+        }
+        // Qwen
+        self.entries.insert("openrouter/qwen/qwen3.6-plus".to_string(), Pricing {
+            input: 3.25e-7, output: 1.95e-6, cache_create: 0.0, cache_read: 0.0,
+            cache_read_explicit: false,
+            input_above_200k: None, output_above_200k: None,
+            cache_create_above_200k: None, cache_read_above_200k: None,
+            fast_multiplier: 1.0,
+        });
+
         for model in [
             "claude-opus-4-5",
             "claude-opus-4-6",

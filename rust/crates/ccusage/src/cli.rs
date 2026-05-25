@@ -1,4 +1,4 @@
-use std::{env, ffi::OsString, path::PathBuf, process};
+use std::{collections::HashMap, env, ffi::OsString, path::PathBuf, process};
 
 use crate::{
     config::{
@@ -57,6 +57,8 @@ pub(crate) struct SharedArgs {
     pub(crate) config: Option<PathBuf>,
     pub(crate) compact: bool,
     pub(crate) single_thread: bool,
+    pub(crate) market_price: bool,
+    pub(crate) model_aliases: HashMap<String, String>,
 }
 
 impl SharedArgs {
@@ -734,6 +736,7 @@ fn parse_shared_arg(parser: &mut ArgParser, shared: &mut SharedArgs) -> Result<(
         "--config" => shared.config = Some(PathBuf::from(parser.value_for("--config")?)),
         "--compact" => shared.compact = true,
         "--single-thread" => shared.single_thread = true,
+        "--market-price" => shared.market_price = true,
         flag => return Err(format!("Unknown option '{flag}'")),
     }
     Ok(())
@@ -977,6 +980,7 @@ fn is_shared_flag(arg: &str) -> bool {
             | "--config"
             | "--compact"
             | "--single-thread"
+            | "--market-price"
     )
 }
 

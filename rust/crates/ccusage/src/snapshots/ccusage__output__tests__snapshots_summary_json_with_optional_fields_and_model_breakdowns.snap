@@ -8,12 +8,14 @@ expression: summary_json(&row)
   "credits": 1.25,
   "date": "2026-01-02",
   "inputTokens": 1234,
+  "marketCost": 0.0,
   "modelBreakdowns": [
     {
       "cacheCreationTokens": 50,
       "cacheReadTokens": 10,
       "cost": 0.3,
       "inputTokens": 900,
+      "marketCost": 0.0,
       "modelName": "gpt-5.2-codex",
       "outputTokens": 300
     },
@@ -22,6 +24,7 @@ expression: summary_json(&row)
       "cacheReadTokens": 0,
       "cost": 0.12,
       "inputTokens": 334,
+      "marketCost": 0.0,
       "modelName": "claude-sonnet-4-20250514",
       "outputTokens": 267
     }

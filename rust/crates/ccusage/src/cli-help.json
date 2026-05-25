@@ -32,6 +32,16 @@
 			"default": "false"
 		},
 		{
+			"flags": "--compact",
+			"description": "Force compact table layout for narrow terminals",
+			"default": "false"
+		},
+		{
+			"flags": "--market-price",
+			"description": "Show market-rate cost alongside recorded cost",
+			"default": "false"
+		},
+		{
 			"flags": "--color",
 			"description": "Enable colored output. FORCE_COLOR=1 has the same effect.",
 			"default": "auto"
@@ -90,6 +100,11 @@
 		{
 			"flags": "--compact",
 			"description": "Force compact table layout for narrow terminals",
+			"default": "false"
+		},
+		{
+			"flags": "--market-price",
+			"description": "Show market-rate cost alongside recorded cost",
 			"default": "false"
 		},
 		{
@@ -310,6 +325,11 @@
 		{
 			"flags": "--compact",
 			"description": "Force compact mode for narrow displays (better for screenshots)",
+			"default": "false"
+		},
+		{
+			"flags": "--market-price",
+			"description": "Show market-rate cost alongside recorded cost",
 			"default": "false"
 		},
 		{

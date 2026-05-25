@@ -30,6 +30,7 @@ struct AllRow {
     cache_read_tokens: u64,
     total_tokens: u64,
     total_cost: f64,
+    market_cost: f64,
     metadata: Option<Value>,
     metadata_agents: Option<Vec<&'static str>>,
     agent_breakdowns: Option<Vec<AllRow>>,
@@ -613,6 +614,7 @@ fn summary_rows(agent: &'static str, summaries: Vec<UsageSummary>) -> Vec<AllRow
                 cache_read_tokens: summary.cache_read_tokens,
                 total_tokens,
                 total_cost: summary.total_cost,
+                market_cost: summary.market_cost,
                 metadata,
                 metadata_agents: Some(vec![agent]),
                 agent_breakdowns: None,
@@ -664,6 +666,7 @@ fn codex_group_row(
                 cache_read_tokens: usage.cached_input_tokens,
                 extra_total_tokens: 0,
                 cost: codex::calculate_codex_model_cost(model, usage, pricing, speed),
+                market_cost: 0.0,
             }
         })
         .collect();
@@ -678,6 +681,7 @@ fn codex_group_row(
         cache_read_tokens: group.cached_input_tokens,
         total_tokens: group.total_tokens,
         total_cost: codex::calculate_group_cost(group, pricing, speed),
+        market_cost: 0.0,
         metadata: Some(json!({
             "lastActivity": group.last_activity,
             "reasoningOutputTokens": group.reasoning_output_tokens,
@@ -718,6 +722,7 @@ struct AllAccumulator {
     cache_read_tokens: u64,
     total_tokens: u64,
     total_cost: f64,
+    market_cost: f64,
     models: BTreeSet<String>,
     agents: BTreeSet<&'static str>,
     agent_breakdowns: Vec<AllRow>,
@@ -731,6 +736,7 @@ impl AllAccumulator {
         self.cache_read_tokens += row.cache_read_tokens;
         self.total_tokens += row.total_tokens;
         self.total_cost += row.total_cost;
+        self.market_cost += row.market_cost;
         self.models.extend(row.models_used.iter().cloned());
         if let Some(agents) = row.metadata_agents.as_ref() {
             self.agents.extend(agents.iter().copied());
@@ -759,6 +765,7 @@ impl AllAccumulator {
             cache_read_tokens: self.cache_read_tokens,
             total_tokens: self.total_tokens,
             total_cost: self.total_cost,
+            market_cost: self.market_cost,
             metadata: None,
             metadata_agents: Some(self.agents.into_iter().collect()),
             agent_breakdowns: Some(agent_breakdowns),
@@ -789,6 +796,7 @@ fn aggregate_model_breakdowns(rows: &[AllRow]) -> Vec<ModelBreakdown> {
             b.cache_read_tokens += item.cache_read_tokens;
             b.extra_total_tokens += item.extra_total_tokens;
             b.cost += item.cost;
+            b.market_cost += item.market_cost;
         }
     }
     breakdowns
@@ -812,6 +820,7 @@ fn row_json(row: &AllRow) -> Value {
         "cacheReadTokens": row.cache_read_tokens,
         "totalTokens": row.total_tokens,
         "totalCost": json_float(row.total_cost),
+        "marketCost": json_float(row.market_cost),
         "modelBreakdowns": row.model_breakdowns,
     });
     if let (Some(obj), Some(agents)) = (value.as_object_mut(), row.metadata_agents.as_ref()) {
@@ -835,6 +844,7 @@ fn totals_json(rows: &[AllRow]) -> Value {
         "cacheReadTokens": rows.iter().map(|row| row.cache_read_tokens).sum::<u64>(),
         "totalTokens": rows.iter().map(|row| row.total_tokens).sum::<u64>(),
         "totalCost": json_float(rows.iter().map(|row| row.total_cost).sum::<f64>()),
+        "marketCost": json_float(rows.iter().map(|row| row.market_cost).sum::<f64>()),
     })
 }
 
@@ -861,16 +871,16 @@ fn print_table(
     let terminal_width = crate::terminal_width();
     let is_tty = std::io::stdout().is_terminal();
     let compact = shared.compact || (is_tty && terminal_width < crate::USAGE_COMPACT_WIDTH_THRESHOLD);
-    let (headers, aligns) = all_table_columns(kind, compact);
+    let (headers, aligns) = all_table_columns(kind, compact, shared.market_price);
     let mut table = SimpleTable::new(headers, aligns, shared)
         .with_terminal_width(terminal_width)
         .with_date_compaction(true);
 
     for row in rows {
-        table.push(all_table_row(row, compact, false));
+        table.push(all_table_row(row, compact, false, shared.market_price));
         if let Some(agent_breakdowns) = row.agent_breakdowns.as_ref() {
             for breakdown in agent_breakdowns {
-                table.push(all_table_row(breakdown, compact, true));
+                table.push(all_table_row(breakdown, compact, true, shared.market_price));
                 if shared.breakdown && !breakdown.model_breakdowns.is_empty() {
                     push_model_breakdown_rows(
                         &mut table,
@@ -888,7 +898,7 @@ fn print_table(
     let totals = totals_json(rows);
     let table_total_tokens = rows.iter().map(table_total_tokens).sum::<u64>();
     if compact {
-        table.push(vec![
+        let mut values = vec![
             color(shared, "Total", Color::Yellow),
             String::new(),
             String::new(),
@@ -912,9 +922,22 @@ fn print_table(
                 ),
                 Color::Yellow,
             ),
-        ]);
+        ];
+        if shared.market_price {
+            values.push(color(
+                shared,
+                format_currency(
+                    totals
+                        .get("marketCost")
+                        .and_then(Value::as_f64)
+                        .unwrap_or(0.0),
+                ),
+                Color::Yellow,
+            ));
+        }
+        table.push(values);
     } else {
-        table.push(vec![
+        let mut values = vec![
             color(shared, "Total", Color::Yellow),
             String::new(),
             String::new(),
@@ -949,7 +972,20 @@ fn print_table(
                 ),
                 Color::Yellow,
             ),
-        ]);
+        ];
+        if shared.market_price {
+            values.push(color(
+                shared,
+                format_currency(
+                    totals
+                        .get("marketCost")
+                        .and_then(Value::as_f64)
+                        .unwrap_or(0.0),
+                ),
+                Color::Yellow,
+            ));
+        }
+        table.push(values);
     }
     table.print();
     if compact {
@@ -1001,7 +1037,7 @@ fn detected_agent_labels(rows: &[AllRow], detected_agents: &[&'static str]) -> S
         .join(", ")
 }
 
-fn all_table_row(row: &AllRow, compact: bool, breakdown: bool) -> Vec<String> {
+fn all_table_row(row: &AllRow, compact: bool, breakdown: bool, market_price: bool) -> Vec<String> {
     let period = if breakdown {
         String::new()
     } else {
@@ -1021,7 +1057,7 @@ fn all_table_row(row: &AllRow, compact: bool, breakdown: bool) -> Vec<String> {
     };
 
     if compact {
-        return vec![
+        let mut values = vec![
             period,
             agent,
             models,
@@ -1029,9 +1065,13 @@ fn all_table_row(row: &AllRow, compact: bool, breakdown: bool) -> Vec<String> {
             format_number(row.output_tokens),
             format_currency(row.total_cost),
         ];
+        if market_price {
+            values.push(format_currency(row.market_cost));
+        }
+        return values;
     }
 
-    vec![
+    let mut values = vec![
         period,
         agent,
         models,
@@ -1041,7 +1081,11 @@ fn all_table_row(row: &AllRow, compact: bool, breakdown: bool) -> Vec<String> {
         format_number(row.cache_read_tokens),
         format_number(table_total_tokens(row)),
         format_currency(row.total_cost),
-    ]
+    ];
+    if market_price {
+        values.push(format_currency(row.market_cost));
+    }
+    values
 }
 
 fn table_total_tokens(row: &AllRow) -> u64 {
@@ -1066,16 +1110,20 @@ fn push_model_breakdown_rows(
             Color::Grey,
         );
         if compact {
-            table.push(vec![
+            let mut values = vec![
                 String::new(),
                 String::new(),
                 model,
                 color(shared, format_number(b.input_tokens), Color::Grey),
                 color(shared, format_number(b.output_tokens), Color::Grey),
                 color(shared, format_currency(b.cost), Color::Grey),
-            ]);
+            ];
+            if shared.market_price {
+                values.push(color(shared, format_currency(b.market_cost), Color::Grey));
+            }
+            table.push(values);
         } else {
-            table.push(vec![
+            let mut values = vec![
                 String::new(),
                 String::new(),
                 model,
@@ -1085,57 +1133,71 @@ fn push_model_breakdown_rows(
                 color(shared, format_number(b.cache_read_tokens), Color::Grey),
                 color(shared, format_number(total), Color::Grey),
                 color(shared, format_currency(b.cost), Color::Grey),
-            ]);
+            ];
+            if shared.market_price {
+                values.push(color(shared, format_currency(b.market_cost), Color::Grey));
+            }
+            table.push(values);
         }
     }
 }
 
-fn all_table_columns(kind: AgentReportKind, compact: bool) -> (Vec<&'static str>, Vec<Align>) {
+fn all_table_columns(
+    kind: AgentReportKind,
+    compact: bool,
+    market_price: bool,
+) -> (Vec<&'static str>, Vec<Align>) {
     if compact {
-        return (
-            vec![
-                first_column(kind),
-                "Agent",
-                "Models",
-                "Input",
-                "Output",
-                "Cost (USD)",
-            ],
-            vec![
-                Align::Left,
-                Align::Left,
-                Align::Left,
-                Align::Right,
-                Align::Right,
-                Align::Right,
-            ],
-        );
-    }
-
-    (
-        vec![
+        let mut headers = vec![
             first_column(kind),
             "Agent",
             "Models",
             "Input",
             "Output",
-            "Cache Create",
-            "Cache Read",
-            "Total Tokens",
             "Cost (USD)",
-        ],
-        vec![
+        ];
+        let mut aligns = vec![
             Align::Left,
             Align::Left,
             Align::Left,
             Align::Right,
             Align::Right,
             Align::Right,
-            Align::Right,
-            Align::Right,
-            Align::Right,
-        ],
-    )
+        ];
+        if market_price {
+            headers.push("Market ($)");
+            aligns.push(Align::Right);
+        }
+        return (headers, aligns);
+    }
+
+    let mut headers = vec![
+        first_column(kind),
+        "Agent",
+        "Models",
+        "Input",
+        "Output",
+        "Cache Create",
+        "Cache Read",
+        "Total Tokens",
+        "Cost (USD)",
+    ];
+    let mut aligns = vec![
+        Align::Left,
+        Align::Left,
+        Align::Left,
+        Align::Right,
+        Align::Right,
+        Align::Right,
+        Align::Right,
+        Align::Right,
+        Align::Right,
+    ];
+    if market_price {
+        headers.push("Market ($)");
+        aligns.push(Align::Right);
+    }
+    (headers, aligns)
 }
 
 fn sort_rows(rows: &mut [AllRow], order: &SortOrder) {
@@ -1204,6 +1266,7 @@ mod tests {
                 cache_read_tokens: 0,
                 total_tokens: 1,
                 total_cost: 0.0,
+                market_cost: 0.0,
                 metadata: None,
                 metadata_agents: Some(vec![agent]),
                 agent_breakdowns: None,
@@ -1265,6 +1328,7 @@ mod tests {
                     cache_read_tokens: 10,
                     total_tokens: 120,
                     total_cost: 0.01,
+                    market_cost: 0.0,
                     metadata: None,
                     metadata_agents: Some(vec!["codex"]),
                     agent_breakdowns: None,
@@ -1280,6 +1344,7 @@ mod tests {
                     cache_read_tokens: 3,
                     total_tokens: 83,
                     total_cost: 0.02,
+                    market_cost: 0.0,
                     metadata: None,
                     metadata_agents: Some(vec!["claude"]),
                     agent_breakdowns: None,
@@ -1320,6 +1385,7 @@ mod tests {
             cache_read_tokens: 10,
             total_tokens: 130,
             total_cost: 0.01,
+            market_cost: 0.0,
             metadata: None,
             metadata_agents: Some(vec!["codex"]),
             agent_breakdowns: None,
@@ -1434,6 +1500,7 @@ mod tests {
                     cache_read_tokens: 2,
                     total_tokens: 17,
                     total_cost: 0.03,
+                    market_cost: 0.0,
                     metadata: None,
                     metadata_agents: Some(vec!["codex"]),
                     agent_breakdowns: None,
@@ -1457,6 +1524,7 @@ mod tests {
                     cache_read_tokens: 4,
                     total_tokens: 57,
                     total_cost: 0.07,
+                    market_cost: 0.0,
                     metadata: None,
                     metadata_agents: Some(vec!["claude"]),
                     agent_breakdowns: None,
@@ -1512,13 +1580,14 @@ mod tests {
             cache_read_tokens: 10,
             total_tokens: 120,
             total_cost: 0.01,
+            market_cost: 0.0,
             metadata: None,
             metadata_agents: Some(vec!["codex"]),
             agent_breakdowns: None,
             model_breakdowns: Vec::new(),
         };
 
-        let cells = all_table_row(&row, false, false);
+        let cells = all_table_row(&row, false, false, false);
 
         assert_eq!(cells[7], "130");
     }
@@ -1535,6 +1604,7 @@ mod tests {
             cache_read_tokens: 10,
             total_tokens: 120,
             total_cost: 0.01,
+            market_cost: 0.0,
             metadata: None,
             metadata_agents: Some(vec!["codex"]),
             agent_breakdowns: None,
@@ -1565,6 +1635,7 @@ mod tests {
             cache_read_tokens: 10,
             total_tokens: 130,
             total_cost: 0.01,
+            market_cost: 0.0,
             metadata: None,
             metadata_agents: Some(vec!["codex"]),
             agent_breakdowns: Some(vec![AllRow {
@@ -1577,6 +1648,7 @@ mod tests {
                 cache_read_tokens: 10,
                 total_tokens: 130,
                 total_cost: 0.01,
+                market_cost: 0.0,
                 metadata: None,
                 metadata_agents: Some(vec!["codex"]),
                 agent_breakdowns: None,
@@ -1586,14 +1658,15 @@ mod tests {
         };
 
         assert_eq!(
-            all_table_row(&row, true, false),
+            all_table_row(&row, true, false, false),
             vec!["2026-01-02", "All", "", "100", "20", "$0.01"]
         );
         assert_eq!(
             all_table_row(
                 row.agent_breakdowns.as_ref().unwrap().first().unwrap(),
                 true,
-                true
+                true,
+                false,
             ),
             vec!["", "- Codex", "- gpt-5", "100", "20", "$0.01"]
         );
@@ -1611,6 +1684,7 @@ mod tests {
             cache_read_tokens: 0,
             total_tokens: 0,
             total_cost: 0.0,
+            market_cost: 0.0,
             metadata: None,
             metadata_agents: Some(vec!["claude", "codex"]),
             agent_breakdowns: None,
@@ -1625,7 +1699,7 @@ mod tests {
 
     #[test]
     fn compact_table_columns_omit_cache_and_total_token_metrics() {
-        let (headers, aligns) = all_table_columns(AgentReportKind::Daily, true);
+        let (headers, aligns) = all_table_columns(AgentReportKind::Daily, true, false);
 
         assert_eq!(
             headers,
@@ -1646,7 +1720,7 @@ mod tests {
 
     #[test]
     fn full_table_columns_include_cache_and_total_token_metrics() {
-        let (headers, aligns) = all_table_columns(AgentReportKind::Daily, false);
+        let (headers, aligns) = all_table_columns(AgentReportKind::Daily, false, false);
 
         assert_eq!(
             headers,

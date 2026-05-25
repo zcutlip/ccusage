@@ -359,6 +359,7 @@ fn openclaw_entry_to_loaded(entry: OpenClawEntry, tz: Option<&JiffTimeZone>) -> 
         session_id: Arc::from(entry.session_id),
         project_path: Arc::from("OpenClaw"),
         cost: entry.cost,
+        market_cost: 0.0,
         extra_total_tokens: entry.total_tokens.saturating_sub(
             entry.input_tokens
                 + entry.output_tokens

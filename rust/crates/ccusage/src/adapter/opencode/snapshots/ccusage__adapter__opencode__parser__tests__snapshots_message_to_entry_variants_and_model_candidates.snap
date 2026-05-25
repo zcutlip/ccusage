@@ -21,7 +21,7 @@ expression: "json!({\n    \"calculated\": entry_snapshot(&calculated), \"display
       "timestamp": "2026-01-02T00:00:00.000Z",
       "version": null
     },
-    "date": "2026-01-02",
+    "date": "2026-01-01",
     "extraTotalTokens": 0,
     "model": "claude-sonnet-4.5",
     "project": "opencode",
@@ -68,7 +68,7 @@ expression: "json!({\n    \"calculated\": entry_snapshot(&calculated), \"display
       "timestamp": "1970-01-01T00:00:00.000Z",
       "version": null
     },
-    "date": "1970-01-01",
+    "date": "1969-12-31",
     "extraTotalTokens": 0,
     "model": "gpt-test",
     "project": "opencode",

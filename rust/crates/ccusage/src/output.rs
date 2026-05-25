@@ -23,6 +23,7 @@ pub(crate) fn summary_json(row: &UsageSummary) -> Value {
         "cacheReadTokens": row.cache_read_tokens,
         "totalTokens": row.total_tokens(),
         "totalCost": row.total_cost,
+        "marketCost": row.market_cost,
         "modelsUsed": row.models_used,
         "modelBreakdowns": row.model_breakdowns,
     });
@@ -55,6 +56,7 @@ pub(crate) fn session_summary_json(row: &UsageSummary) -> Value {
         "cacheReadTokens": row.cache_read_tokens,
         "totalTokens": row.total_tokens(),
         "totalCost": row.total_cost,
+        "marketCost": row.market_cost,
         "lastActivity": row.last_activity,
         "modelsUsed": row.models_used,
         "modelBreakdowns": row.model_breakdowns,
@@ -82,6 +84,7 @@ pub(crate) fn totals_json(rows: &[UsageSummary]) -> Value {
         "cacheReadTokens": cache_read,
         "totalTokens": input + output + cache_create + cache_read + extra,
         "totalCost": rows.iter().map(|row| row.total_cost).sum::<f64>(),
+        "marketCost": rows.iter().map(|row| row.market_cost).sum::<f64>(),
     });
     let credits = rows.iter().filter_map(|row| row.credits).sum::<f64>();
     if credits > 0.0 {
@@ -180,6 +183,10 @@ pub(crate) fn print_usage_table(
             Align::Right,
         ]
     };
+    if shared.market_price {
+        headers.push("Market ($)");
+        aligns.push(Align::Right);
+    }
     if include_last_activity {
         headers.push("Last Activity");
         aligns.push(Align::Left);
@@ -215,15 +222,19 @@ pub(crate) fn print_usage_table(
         let models = format_models_multiline(&row.models_used);
         let total_tokens = row.total_tokens();
         let mut values = if compact {
-            vec![
+            let mut v = vec![
                 label.to_string(),
                 models,
                 format_number(row.input_tokens),
                 format_number(row.output_tokens),
                 format_currency(row.total_cost),
-            ]
+            ];
+            if shared.market_price {
+                v.push(format_currency(row.market_cost));
+            }
+            v
         } else {
-            vec![
+            let mut v = vec![
                 label.to_string(),
                 models,
                 format_number(row.input_tokens),
@@ -232,7 +243,11 @@ pub(crate) fn print_usage_table(
                 format_number(row.cache_read_tokens),
                 format_number(total_tokens),
                 format_currency(row.total_cost),
-            ]
+            ];
+            if shared.market_price {
+                v.push(format_currency(row.market_cost));
+            }
+            v
         };
         if include_last_activity {
             values.push(row.last_activity.clone().unwrap_or_default());
@@ -264,21 +279,29 @@ pub(crate) fn print_usage_table(
         .get("totalCost")
         .and_then(Value::as_f64)
         .unwrap_or_default();
+    let market_cost = totals
+        .get("marketCost")
+        .and_then(Value::as_f64)
+        .unwrap_or_default();
     let total_tokens = totals
         .get("totalTokens")
         .and_then(Value::as_u64)
         .unwrap_or(input + output + cache_create + cache_read);
     table.separator();
     let mut total_row = if compact {
-        vec![
+        let mut v = vec![
             color(shared, "Total", Color::Yellow),
             String::new(),
             color(shared, format_number(input), Color::Yellow),
             color(shared, format_number(output), Color::Yellow),
             color(shared, format_currency(total_cost), Color::Yellow),
-        ]
+        ];
+        if shared.market_price {
+            v.push(color(shared, format_currency(market_cost), Color::Yellow));
+        }
+        v
     } else {
-        vec![
+        let mut v = vec![
             color(shared, "Total", Color::Yellow),
             String::new(),
             color(shared, format_number(input), Color::Yellow),
@@ -287,7 +310,11 @@ pub(crate) fn print_usage_table(
             color(shared, format_number(cache_read), Color::Yellow),
             color(shared, format_number(total_tokens), Color::Yellow),
             color(shared, format_currency(total_cost), Color::Yellow),
-        ]
+        ];
+        if shared.market_price {
+            v.push(color(shared, format_currency(market_cost), Color::Yellow));
+        }
+        v
     };
     if include_last_activity {
         total_row.push(String::new());
@@ -337,7 +364,7 @@ fn push_breakdown_rows(
             + breakdown.cache_creation_tokens
             + breakdown.cache_read_tokens;
         let mut values = if compact {
-            vec![
+            let mut v = vec![
                 color(
                     shared,
                     format!("  └─ {}", short_model_name(&breakdown.model_name)),
@@ -347,9 +374,13 @@ fn push_breakdown_rows(
                 color(shared, format_number(breakdown.input_tokens), Color::Grey),
                 color(shared, format_number(breakdown.output_tokens), Color::Grey),
                 color(shared, format_currency(breakdown.cost), Color::Grey),
-            ]
+            ];
+            if shared.market_price {
+                v.push(color(shared, format_currency(breakdown.market_cost), Color::Grey));
+            }
+            v
         } else {
-            vec![
+            let mut v = vec![
                 color(
                     shared,
                     format!("  └─ {}", short_model_name(&breakdown.model_name)),
@@ -370,7 +401,11 @@ fn push_breakdown_rows(
                 ),
                 color(shared, format_number(total), Color::Grey),
                 color(shared, format_currency(breakdown.cost), Color::Grey),
-            ]
+            ];
+            if shared.market_price {
+                v.push(color(shared, format_currency(breakdown.market_cost), Color::Grey));
+            }
+            v
         };
         if include_last_activity {
             values.push(String::new());
@@ -434,6 +469,7 @@ mod tests {
             cache_read_tokens: 5,
             extra_total_tokens: 7,
             total_cost: 0.25,
+            market_cost: 0.0,
             credits: None,
             message_count: None,
             models_used: vec!["gpt-5".to_string()],
@@ -513,6 +549,7 @@ mod tests {
             cache_read_tokens: 10,
             extra_total_tokens: 0,
             total_cost: 0.42,
+            market_cost: 0.0,
             credits,
             message_count: Some(7),
             models_used: vec![
@@ -528,6 +565,7 @@ mod tests {
                     cache_read_tokens: 10,
                     extra_total_tokens: 0,
                     cost: 0.3,
+                    market_cost: 0.0,
                 },
                 ModelBreakdown {
                     model_name: "claude-sonnet-4-20250514".to_string(),
@@ -537,6 +575,7 @@ mod tests {
                     cache_read_tokens: 0,
                     extra_total_tokens: 0,
                     cost: 0.12,
+                    market_cost: 0.0,
                 },
             ],
             project: project.map(str::to_string),

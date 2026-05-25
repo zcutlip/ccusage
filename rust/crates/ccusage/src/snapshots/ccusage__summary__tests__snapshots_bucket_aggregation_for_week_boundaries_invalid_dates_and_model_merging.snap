@@ -9,6 +9,7 @@ expression: "serde_json::json!({ \"weekly\": weekly, \"monthly\": monthly, })"
       "cacheReadTokens": 2,
       "credits": 0.5,
       "inputTokens": 100,
+      "marketCost": 0.0,
       "messageCount": 1,
       "modelBreakdowns": [
         {
@@ -16,6 +17,7 @@ expression: "serde_json::json!({ \"weekly\": weekly, \"monthly\": monthly, })"
           "cacheReadTokens": 2,
           "cost": 0.125,
           "inputTokens": 100,
+          "marketCost": 0.0,
           "modelName": "gpt-5.2-codex",
           "outputTokens": 10
         }
@@ -32,6 +34,7 @@ expression: "serde_json::json!({ \"weekly\": weekly, \"monthly\": monthly, })"
       "cacheReadTokens": 4,
       "credits": 1.0,
       "inputTokens": 500,
+      "marketCost": 0.0,
       "messageCount": 2,
       "modelBreakdowns": [
         {
@@ -39,6 +42,7 @@ expression: "serde_json::json!({ \"weekly\": weekly, \"monthly\": monthly, })"
           "cacheReadTokens": 2,
           "cost": 0.5,
           "inputTokens": 300,
+          "marketCost": 0.0,
           "modelName": "gpt-5.2-codex",
           "outputTokens": 10
         },
@@ -47,6 +51,7 @@ expression: "serde_json::json!({ \"weekly\": weekly, \"monthly\": monthly, })"
           "cacheReadTokens": 2,
           "cost": 0.25,
           "inputTokens": 200,
+          "marketCost": 0.0,
           "modelName": "claude-sonnet-4-20250514",
           "outputTokens": 10
         }
@@ -64,6 +69,7 @@ expression: "serde_json::json!({ \"weekly\": weekly, \"monthly\": monthly, })"
       "cacheReadTokens": 2,
       "credits": 0.5,
       "inputTokens": 1,
+      "marketCost": 0.0,
       "messageCount": 1,
       "modelBreakdowns": [
         {
@@ -71,6 +77,7 @@ expression: "serde_json::json!({ \"weekly\": weekly, \"monthly\": monthly, })"
           "cacheReadTokens": 2,
           "cost": 0.0,
           "inputTokens": 1,
+          "marketCost": 0.0,
           "modelName": "unknown-model",
           "outputTokens": 10
         }
@@ -89,6 +96,7 @@ expression: "serde_json::json!({ \"weekly\": weekly, \"monthly\": monthly, })"
       "cacheReadTokens": 4,
       "credits": 1.0,
       "inputTokens": 300,
+      "marketCost": 0.0,
       "messageCount": 2,
       "modelBreakdowns": [
         {
@@ -96,6 +104,7 @@ expression: "serde_json::json!({ \"weekly\": weekly, \"monthly\": monthly, })"
           "cacheReadTokens": 2,
           "cost": 0.25,
           "inputTokens": 200,
+          "marketCost": 0.0,
           "modelName": "claude-sonnet-4-20250514",
           "outputTokens": 10
         },
@@ -104,6 +113,7 @@ expression: "serde_json::json!({ \"weekly\": weekly, \"monthly\": monthly, })"
           "cacheReadTokens": 2,
           "cost": 0.125,
           "inputTokens": 100,
+          "marketCost": 0.0,
           "modelName": "gpt-5.2-codex",
           "outputTokens": 10
         }
@@ -121,6 +131,7 @@ expression: "serde_json::json!({ \"weekly\": weekly, \"monthly\": monthly, })"
       "cacheReadTokens": 2,
       "credits": 0.5,
       "inputTokens": 300,
+      "marketCost": 0.0,
       "messageCount": 1,
       "modelBreakdowns": [
         {
@@ -128,6 +139,7 @@ expression: "serde_json::json!({ \"weekly\": weekly, \"monthly\": monthly, })"
           "cacheReadTokens": 2,
           "cost": 0.5,
           "inputTokens": 300,
+          "marketCost": 0.0,
           "modelName": "gpt-5.2-codex",
           "outputTokens": 10
         }
@@ -144,6 +156,7 @@ expression: "serde_json::json!({ \"weekly\": weekly, \"monthly\": monthly, })"
       "cacheReadTokens": 2,
       "credits": 0.5,
       "inputTokens": 1,
+      "marketCost": 0.0,
       "messageCount": 1,
       "modelBreakdowns": [
         {
@@ -151,6 +164,7 @@ expression: "serde_json::json!({ \"weekly\": weekly, \"monthly\": monthly, })"
           "cacheReadTokens": 2,
           "cost": 0.0,
           "inputTokens": 1,
+          "marketCost": 0.0,
           "modelName": "unknown-model",
           "outputTokens": 10
         }

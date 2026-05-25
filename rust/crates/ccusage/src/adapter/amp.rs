@@ -243,6 +243,7 @@ pub(crate) fn read_thread_file(
             session_id: Arc::from(thread_id.as_str()),
             project_path: Arc::from("Amp"),
             cost,
+            market_cost: 0.0,
             extra_total_tokens,
             credits: json_value_f64(event.get("credits")),
             message_count: None,
